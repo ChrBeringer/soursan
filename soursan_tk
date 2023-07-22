@@ -1,0 +1,191 @@
+import tkinter as tk
+from tkinter import ttk
+from sqlalchemy import create_engine, Column, Integer, String, Date
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+DATABASE_URI = 'sqlite:///mydatabase.db'  # Replace 'mydatabase.db' with the name of your SQLite database file
+
+Base = declarative_base()
+engine = create_engine(DATABASE_URI)
+Session = sessionmaker(bind=engine)
+
+
+class DocumentType(Base):
+    __tablename__ = 'documenttype'
+    doctype_id = Column(Integer, primary_key=True)
+    doctype_name = Column(String(30), nullable=False)
+    description = Column(String(150))
+
+
+class PlaceOfOrigin(Base):
+    __tablename__ = 'place_of_origin'
+    idplave_of_origin = Column(Integer, primary_key=True)
+    City = Column(String(50))
+    Institution = Column(String(50))
+    Street = Column(String(50))
+    Number = Column(String(5))
+    Postcode = Column(Integer)
+
+
+class Subject(Base):
+    __tablename__ = 'subjects'
+    subject_id = Column(Integer, primary_key=True)
+    prename = Column(String(30), nullable=False)
+    lastname = Column(String(30))
+    date_of_birth = Column(Date)
+    role = Column(String(150))
+    gender = Column(String(10))
+
+
+Base.metadata.create_all(engine)
+
+
+def insert_document_type(doctype_name, description=None):
+    with Session() as session:
+        new_doc_type = DocumentType(doctype_name=doctype_name, description=description)
+        session.add(new_doc_type)
+        session.commit()
+
+
+def insert_place_of_origin(city, institution, street, number, postcode):
+    with Session() as session:
+        new_place_of_origin = PlaceOfOrigin(City=city, Institution=institution, Street=street, Number=number, Postcode=postcode)
+        session.add(new_place_of_origin)
+        session.commit()
+
+
+def insert_subject(prename, lastname=None, date_of_birth=None, role=None, gender=None):
+    with Session() as session:
+        new_subject = Subject(prename=prename, lastname=lastname, date_of_birth=date_of_birth, role=role, gender=gender)
+        session.add(new_subject)
+        session.commit()
+
+
+class DataInsertForm(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Data Insertion Form")
+        self.geometry("400x300")
+
+        self.table_choice_var = tk.StringVar()
+        self.create_widgets()
+
+    def create_widgets(self):
+        # Table Choice
+        table_label = ttk.Label(self, text="Choose a table:")
+        table_label.pack(pady=5)
+
+        table_combobox = ttk.Combobox(self, textvariable=self.table_choice_var, state="readonly")
+        table_combobox["values"] = ["DocumentType", "PlaceOfOrigin", "Subject"]
+        table_combobox.pack(pady=5)
+        table_combobox.bind("<<ComboboxSelected>>", self.show_form)
+
+    def show_form(self, event):
+        table_name = self.table_choice_var.get()
+        if table_name == "DocumentType":
+            self.show_document_type_form()
+        elif table_name == "PlaceOfOrigin":
+            self.show_place_of_origin_form()
+        elif table_name == "Subject":
+            self.show_subject_form()
+
+    def show_document_type_form(self):
+        form_label = ttk.Label(self, text="Fill in Document Type Information:")
+        form_label.pack(pady=5)
+
+        doctype_name_label = ttk.Label(self, text="Document Type Name:")
+        doctype_name_label.pack()
+        doctype_name_entry = ttk.Entry(self)
+        doctype_name_entry.pack()
+
+        description_label = ttk.Label(self, text="Description:")
+        description_label.pack()
+        description_entry = ttk.Entry(self)
+        description_entry.pack()
+
+        save_button = ttk.Button(self, text="Save", command=lambda: self.save_document_type(doctype_name_entry.get(), description_entry.get()))
+        save_button.pack(pady=10)
+
+    def show_place_of_origin_form(self):
+        form_label = ttk.Label(self, text="Fill in Place of Origin Information:")
+        form_label.pack(pady=5)
+
+        city_label = ttk.Label(self, text="City:")
+        city_label.pack()
+        city_entry = ttk.Entry(self)
+        city_entry.pack()
+
+        institution_label = ttk.Label(self, text="Institution:")
+        institution_label.pack()
+        institution_entry = ttk.Entry(self)
+        institution_entry.pack()
+
+        street_label = ttk.Label(self, text="Street:")
+        street_label.pack()
+        street_entry = ttk.Entry(self)
+        street_entry.pack()
+
+        number_label = ttk.Label(self, text="Number:")
+        number_label.pack()
+        number_entry = ttk.Entry(self)
+        number_entry.pack()
+
+        postcode_label = ttk.Label(self, text="Postcode:")
+        postcode_label.pack()
+        postcode_entry = ttk.Entry(self)
+        postcode_entry.pack()
+
+        save_button = ttk.Button(self, text="Save", command=lambda: self.save_place_of_origin(city_entry.get(), institution_entry.get(),
+                                                                                             street_entry.get(), number_entry.get(), postcode_entry.get()))
+        save_button.pack(pady=10)
+
+    def show_subject_form(self):
+        form_label = ttk.Label(self, text="Fill in Subject Information:")
+        form_label.pack(pady=5)
+
+        prename_label = ttk.Label(self, text="Prename:")
+        prename_label.pack()
+        prename_entry = ttk.Entry(self)
+        prename_entry.pack()
+
+        lastname_label = ttk.Label(self, text="Lastname:")
+        lastname_label.pack()
+        lastname_entry = ttk.Entry(self)
+        lastname_entry.pack()
+
+        dob_label = ttk.Label(self, text="Date of Birth (YYYY-MM-DD):")
+        dob_label.pack()
+        dob_entry = ttk.Entry(self)
+        dob_entry.pack()
+
+        role_label = ttk.Label(self, text="Role:")
+        role_label.pack()
+        role_entry = ttk.Entry(self)
+        role_entry.pack()
+
+        gender_label = ttk.Label(self, text="Gender:")
+        gender_label.pack()
+        gender_entry = ttk.Entry(self)
+        gender_entry.pack()
+
+        save_button = ttk.Button(self, text="Save", command=lambda: self.save_subject(prename_entry.get(), lastname_entry.get(),
+                                                                                     dob_entry.get(), role_entry.get(), gender_entry.get()))
+        save_button.pack(pady=10)
+
+    def save_document_type(self, doctype_name, description):
+        insert_document_type(doctype_name, description)
+        tk.messagebox.showinfo("Success", "Document Type information saved successfully.")
+
+    def save_place_of_origin(self, city, institution, street, number, postcode):
+        insert_place_of_origin(city, institution, street, number, postcode)
+        tk.messagebox.showinfo("Success", "Place of Origin information saved successfully.")
+
+    def save_subject(self, prename, lastname, dob, role, gender):
+        insert_subject(prename, lastname, dob, role, gender)
+        tk.messagebox.showinfo("Success", "Subject information saved successfully.")
+
+
+if __name__ == "__main__":
+    app = DataInsertForm()
+    app.mainloop()
